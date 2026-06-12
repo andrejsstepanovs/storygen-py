@@ -49,7 +49,7 @@ def convert_narrative_to_script(text: str, speaker_mapping: dict[str, str]) -> t
     if narration_after:
         lines.append(f"Narrator: {narration_after}")
 
-    if used_speakers:
+    if any("Narrator:" in line for line in lines):
         used_speakers["Narrator"] = settings.voice
 
     speaker_configs = [{"speaker": k, "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": v}}} for k, v in used_speakers.items()]
