@@ -1,7 +1,6 @@
 import json
 import random
 from typing import List
-from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
 
@@ -70,29 +69,31 @@ def build_story(suggestion: str) -> Story:
     vprint(f"[bold cyan]Selected Morales:[/bold cyan] {', '.join([m.name for m in story.morales])}")
 
     # 4. Protagonists
-    p_chain = FIGURE_PROTAGONISTS_PROMPT | llm | JsonOutputParser()
-    raw_prots = p_chain.invoke({
-        "audience": settings.audience,
-        "story_json": story.model_dump_json(),
-        "general_instruction": GENERAL_INSTRUCTION,
-        "force_json": FORCE_JSON,
-        "example_json": '[{"name": "Max", "voice": "Squeaky, energetic, and slightly breathless young boy", "type": "human", "gender": "male", "size": "small", "age": "child"}]'
-    })
-    story.protagonists = [Protagonist(**p) for p in raw_prots]
-    for p in story.protagonists:
-        vprint(f"[bold cyan]Protagonist:[/bold cyan] {p.name} ({p.type}, {p.gender}, {p.age}, voice: {p.voice})")
+    p_chain = FIGURE_PROTAGONISTS_PROMPT | llm.with_structured_output(List[Protagonist])
+    try:
+        story.protagonists = p_chain.invoke({
+            "audience": settings.audience,
+            "story_json": story.model_dump_json(),
+            "general_instruction": GENERAL_INSTRUCTION,
+            "force_json": FORCE_JSON,
+            "example_json": '[{"name": "Max", "voice": "Squeaky, energetic, and slightly breathless young boy", "type": "human", "gender": "male", "size": "small", "age": "child"}]'
+        })
+        for p in story.protagonists:
+            vprint(f"[bold cyan]Protagonist:[/bold cyan] {p.name} ({p.type}, {p.gender}, {p.age}, voice: {p.voice})")
+    except Exception as e:
+        vprint(f"[bold red]Failed to generate protagonists:[/bold red] {e}")
+        story.protagonists = []
 
     # 5. Villain
-    v_chain = FIGURE_VILLAIN_PROMPT | llm | JsonOutputParser()
+    v_chain = FIGURE_VILLAIN_PROMPT | llm.with_structured_output(Villain)
     try:
-        raw_villain = v_chain.invoke({
+        story.villain = v_chain.invoke({
             "audience": settings.audience,
             "story_json": story.model_dump_json(),
             "general_instruction": GENERAL_INSTRUCTION,
             "force_json": FORCE_JSON,
             "example_json": '{"name": "Captain Hookbeak", "description": "A pterosaur pirate captain", "voice": "A screechy, gravelly voice", "visual_look": "Wears a tiny pirate hat", "backstory": "Lost his treasure"}'
         })
-        story.villain = Villain(**raw_villain)
         if story.villain:
             vprint(f"[bold cyan]Villain:[/bold cyan] {story.villain.name} - {story.villain.description} (voice: {story.villain.voice})")
     except Exception as e:
@@ -179,7 +180,7 @@ def refine_story(story: Story) -> Story:
     if settings.preread_loops == 0:
         return story
 
-    prob_chain = FIGURE_LOGICAL_PROBLEMS_PROMPT | llm | JsonOutputParser()
+    prob_chain = FIGURE_LOGICAL_PROBLEMS_PROMPT | llm.with_structured_output(List[Problem])
     sug_chain = SUGGEST_FIXES_PROMPT | llm | JsonOutputParser()
     adj_chain = ADJUST_CHAPTER_PROMPT | llm
 
@@ -191,7 +192,7 @@ def refine_story(story: Story) -> Story:
     for loop in range(1, settings.preread_loops + 1):
         content = story.build_content()
         try:
-            raw_probs = prob_chain.invoke({
+            problems = prob_chain.invoke({
                 "audience": settings.audience,
                 "story_text": content,
                 "story_json": story.model_dump_json(),
@@ -201,11 +202,12 @@ def refine_story(story: Story) -> Story:
                 "force_json": FORCE_JSON,
                 "example_json": '[{"chapter_number_int": 1, "chapter_name": "Title", "issues_array_string": ["Issue 1"]}]'
             })
-            problems = [Problem(**p) for p in raw_probs]
-        except Exception:
+        except Exception as e:
+            vprint(f"[bold red]Failed to identify problems in loop {loop}:[/bold red] {e}")
             break
         
         if not problems:
+            vprint(f"[bold magenta]Loop {loop}: No problems found, finishing refinement.[/bold magenta]")
             break
 
         all_suggestions = []
@@ -229,7 +231,8 @@ def refine_story(story: Story) -> Story:
                     "addressed_suggestions_json": json.dumps([s.model_dump() for s in all_addressed_suggestions])
                 })
                 suggestions = [Suggestion(**s) for s in raw_sugs]
-            except Exception:
+            except Exception as e:
+                vprint(f"[bold red]Failed to generate suggestions for chapter {problem.chapter_number_int}:[/bold red] {e}")
                 continue
             
             if not suggestions:
