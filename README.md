@@ -11,6 +11,7 @@
 - **Multi-speaker TTS** — Characters get distinct voices; narrator handles narration
 - **Audiobook compilation** — Chapters merged into a single MP3 with adjustable playback speed
 - **Configurable** — Target length in minutes, speech speed, chapter count, audience type
+- **Multi-provider LLM** — Works with OpenAI, Anthropic (via proxy), OpenRouter, OpenCode, and any OpenAI-compatible endpoint
 
 ---
 
@@ -23,24 +24,55 @@ cd storygen-py
 
 # 2. Create and fill environment file
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your API keys (see LLM Providers section below)
 
-# 3. Install dependencies with uv (no venv needed — uv handles it)
+# 3. Install dependencies
 uv sync
 
-# 4. Activate (uv manages the virtual env path automatically)
-source .venv/bin/activate
-
-# Or run directly with uv:
+# 4. Verify it works
 uv run python -m storygen.main story voices
 ```
 
-### Required API Keys
+---
 
-| Key | Where to get |
-|---|---|
-| `LLM_API_KEY` | Your OpenCode / LLM gateway provider |
-| `GOOGLE_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) — for Gemini TTS |
+## LLM Providers
+
+StoryGen uses LangChain's `ChatOpenAI` with an OpenAI-compatible interface, so it works with any provider that speaks the OpenAI API format. Edit `.env` to switch.
+
+### OpenAI (official)
+
+```env
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_API_KEY=sk-...
+MODEL_NAME=gpt-4o-mini
+```
+
+### OpenRouter (recommended — OpenAI + Anthropic + Gemini + many others)
+
+Sign up at [openrouter.ai/keys](https://openrouter.ai/keys). Supports Anthropic Claude models natively.
+
+```env
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=sk-or-...
+# Anthropic
+MODEL_NAME=anthropic/claude-sonnet-4-20250514
+# OpenAI
+MODEL_NAME=openai/gpt-4o-mini
+# Google
+MODEL_NAME=google/gemini-2.0-flash-exp
+```
+
+### OpenCode Zen (current default)
+
+```env
+LLM_BASE_URL=https://opencode.ai/zen/go/v1
+LLM_API_KEY=sk-...
+MODEL_NAME=deepseek-v4-flash
+```
+
+### Other OpenAI-compatible providers
+
+Any provider using the standard `/v1/chat/completions` endpoint works — Portkey, Cloudflare Workers AI, self-hosted vLLM, etc. Just set `LLM_BASE_URL` and `LLM_API_KEY` accordingly.
 
 ---
 
@@ -48,16 +80,16 @@ uv run python -m storygen.main story voices
 
 ```bash
 # Generate + synthesize a full audiobook
-python -m storygen.main story create "A tiny frog who wanted to fly"
+uv run python -m storygen.main story create "A tiny frog who wanted to fly"
 
 # Write story text only (no audio)
-python -m storygen.main story write "A sleepy dragon in a quiet volcano"
+uv run python -m storygen.main story write "A sleepy dragon in a quiet volcano"
 
 # Synthesize audio from an existing story JSON
-python -m storygen.main story voice tmp/final_groomed_A_tiny_frog.json
+uv run python -m storygen.main story voice tmp/final_groomed_A_tiny_frog.json
 
 # List available TTS voices
-python -m storygen.main story voices
+uv run python -m storygen.main story voices
 ```
 
 ### Options
@@ -110,5 +142,5 @@ mp3/
 
 - Python 3.11+
 - [ffmpeg](https://ffmpeg.org/) (for audio merging and speed adjustment)
-- Gemini TTS API access
-- LLM gateway (OpenCode or compatible)
+- Gemini TTS API access (`GOOGLE_API_KEY` from [Google AI Studio](https://aistudio.google.com/app/apikey))
+- LLM provider with OpenAI-compatible API
