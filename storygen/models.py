@@ -38,6 +38,21 @@ class Problem(BaseModel):
     chapter_name: str
     issues_array_string: List[str]
 
+class Problems(BaseModel):
+    """Wrapper for list of Problems returned by structured output."""
+    problems: List["Problem"]
+
+
+class Suggestions(BaseModel):
+    """Wrapper for list of Suggestions returned by structured output."""
+    suggestions: List["Suggestion"]
+
+
+class Protagonists(BaseModel):
+    """Wrapper for list of Protagonists returned by structured output."""
+    protagonists: List["Protagonist"]
+
+
 class Suggestion(BaseModel):
     chapter_number_int: int
     chapter_name: str
