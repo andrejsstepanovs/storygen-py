@@ -49,8 +49,9 @@ def convert_narrative_to_script(text: str, speaker_mapping: dict[str, str]) -> t
     if narration_after:
         lines.append(f"Narrator: {narration_after}")
 
-    if any("Narrator:" in line for line in lines):
+    if len(used_speakers) >= 2:
         used_speakers["Narrator"] = settings.voice
+    # If only 0-1 speaking characters, use single-voice narration (no multiSpeakerVoiceConfig)
 
     speaker_configs = [{"speaker": k, "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": v}}} for k, v in used_speakers.items()]
     return "\n".join(lines), speaker_configs
