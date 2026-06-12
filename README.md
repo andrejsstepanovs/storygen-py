@@ -90,6 +90,9 @@ uv run python -m storygen.main story voice tmp/final_groomed_A_tiny_frog.json
 
 # List available TTS voices
 uv run python -m storygen.main story voices
+
+# Full help (all commands and options)
+uv run python -m storygen.main --help
 ```
 
 ### Options
