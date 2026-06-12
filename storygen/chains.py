@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
 
 from storygen.config import settings
-from storygen.models import Story, Protagonist, Villain, Problem, Suggestion, Structure, TimePeriod, Morale, Chapter
+from storygen.models import Story, Protagonist, Villain, Problem, Suggestion, Structure, TimePeriod, Morale, Chapter, Protagonists, Problems, Suggestions
 from storygen.utils import get_chapter_count_and_length, get_chapter_word_counts, remove_emojis, vprint
 from storygen.prompts import (
     CHAPTER_PROMPT_INSTRUCTIONS, FORCE_JSON, GENERAL_INSTRUCTION,
@@ -69,15 +69,16 @@ def build_story(suggestion: str) -> Story:
     vprint(f"[bold cyan]Selected Morales:[/bold cyan] {', '.join([m.name for m in story.morales])}")
 
     # 4. Protagonists
-    p_chain = FIGURE_PROTAGONISTS_PROMPT | llm.with_structured_output(List[Protagonist])
+    p_chain = FIGURE_PROTAGONISTS_PROMPT | llm.with_structured_output(Protagonists)
     try:
-        story.protagonists = p_chain.invoke({
+        result = p_chain.invoke({
             "audience": settings.audience,
             "story_json": story.model_dump_json(),
             "general_instruction": GENERAL_INSTRUCTION,
             "force_json": FORCE_JSON,
             "example_json": '[{"name": "Max", "voice": "Squeaky, energetic, and slightly breathless young boy", "type": "human", "gender": "male", "size": "small", "age": "child"}]'
         })
+        story.protagonists = result.protagonists
         for p in story.protagonists:
             vprint(f"[bold cyan]Protagonist:[/bold cyan] {p.name} ({p.type}, {p.gender}, {p.age}, voice: {p.voice})")
     except Exception as e:
@@ -180,7 +181,7 @@ def refine_story(story: Story) -> Story:
     if settings.preread_loops == 0:
         return story
 
-    prob_chain = FIGURE_LOGICAL_PROBLEMS_PROMPT | llm.with_structured_output(List[Problem])
+    prob_chain = FIGURE_LOGICAL_PROBLEMS_PROMPT | llm.with_structured_output(Problems)
     sug_chain = SUGGEST_FIXES_PROMPT | llm | JsonOutputParser()
     adj_chain = ADJUST_CHAPTER_PROMPT | llm
 
@@ -192,7 +193,7 @@ def refine_story(story: Story) -> Story:
     for loop in range(1, settings.preread_loops + 1):
         content = story.build_content()
         try:
-            problems = prob_chain.invoke({
+            result = prob_chain.invoke({
                 "audience": settings.audience,
                 "story_text": content,
                 "story_json": story.model_dump_json(),
@@ -202,6 +203,7 @@ def refine_story(story: Story) -> Story:
                 "force_json": FORCE_JSON,
                 "example_json": '[{"chapter_number_int": 1, "chapter_name": "Title", "issues_array_string": ["Issue 1"]}]'
             })
+            problems = result.problems
         except Exception as e:
             vprint(f"[bold red]Failed to identify problems in loop {loop}:[/bold red] {e}")
             break
