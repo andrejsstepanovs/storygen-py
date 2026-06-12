@@ -25,12 +25,14 @@ cd storygen-py
 cp .env.example .env
 # Edit .env with your API keys
 
-# 3. Install dependencies
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+# 3. Install dependencies with uv (no venv needed — uv handles it)
+uv sync
 
-# 4. Verify TTS voices are available
-python -m storygen.main story voices
+# 4. Activate (uv manages the virtual env path automatically)
+source .venv/bin/activate
+
+# Or run directly with uv:
+uv run python -m storygen.main story voices
 ```
 
 ### Required API Keys
