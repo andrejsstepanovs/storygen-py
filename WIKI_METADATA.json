@@ -1,0 +1,151 @@
+{
+  "system_info": {
+    "project_name": "Storygen-py",
+    "project_type": "Python Children Story and Audiobook Generator CLI",
+    "wiki_maturity": 4,
+    "last_run_utc": "2026-06-12T15:10:42Z",
+    "primary_domains": [
+      "CLI / User Interaction",
+      "Story Orchestration & Prompting",
+      "Speech Synthesis (TTS)",
+      "Post-Processing (ffmpeg)"
+    ]
+  },
+  "git_state": {
+    "last_checked_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba",
+    "previous_checked_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba",
+    "change_impact_summary": "Enforced chapter titles/numbers exclusion in LLM chapter text generation/rewriting prompts, updated protagonist voice generation examples and instructions to reject vague tags and require highly descriptive traits, prevented duplicate story title repetition in single-chapter narrative builds, and allocated the full word budget directly to single-chapter configurations.",
+    "change_categories": [
+      "product capability / workflow",
+      "business logic / specific rules / edge cases",
+      "architecture / cross-component interaction"
+    ]
+  },
+  "analysis_registry": {
+    "file_analysis_log": [
+      {
+        "path": "storygen/main.py",
+        "depth": 4,
+        "feature_area": "CLI entry point and command router",
+        "summary": "Defines CLI commands for listing voices, generating stories (with/without voice), reading story files, grooming existing story files, and converting existing stories to voice.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      },
+      {
+        "path": "storygen/models.py",
+        "depth": 4,
+        "feature_area": "Data models and structures",
+        "summary": "Defines Pydantic models for Story, Chapter, Protagonist, Villain, Morale, etc. Updated build_content to prevent repeating story title in headers when chapter title matches story title.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      },
+      {
+        "path": "storygen/config.py",
+        "depth": 4,
+        "feature_area": "System Configuration",
+        "summary": "Defines settings with pydantic-settings, including model configuration (loaded from storygen.env), default reading speeds, and lists of valid TTS voices.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      },
+      {
+        "path": "storygen/chains.py",
+        "depth": 4,
+        "feature_area": "Story Orchestration Chains",
+        "summary": "Uses LangChain to run prompt chains that sequentially generate story outlines, protagonist details, time periods, morales, villains, summaries, plans, chapter titles, chapter texts, and perform story refinement loops. Updated protagonist voice example JSON.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      },
+      {
+        "path": "storygen/prompts.py",
+        "depth": 4,
+        "feature_area": "LLM Prompt Templates",
+        "summary": "Contains prompt templates for story layout generation, protagonist definitions, villain descriptions, summaries, chapter text, issue pre-reading/detection, and chapter adjustments. Updated to enforce descriptive voices and exclude chapter titles/numbers in LLM outputs.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      },
+      {
+        "path": "storygen/tts.py",
+        "depth": 4,
+        "feature_area": "Speech Synthesis & Audio Compilation",
+        "summary": "Converts story narration and dialogue to script format, maps speakers to specific TTS voices (multi-speaker/prebuilt voice config), calls Gemini TTS API, and joins generated chapters via ffmpeg.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      },
+      {
+        "path": "storygen/utils.py",
+        "depth": 4,
+        "feature_area": "Helper Utilities",
+        "summary": "Helper functions to compute word count limits per chapter based on reading speed, sanitize filenames, save/load story JSON, and clean text emojis. Updated to assign full word budget to 1-chapter stories.",
+        "last_seen_sha": "e15c583cd92aa4cdafa7529e85c8bd115353a1ba"
+      }
+    ],
+    "feature_coverage": [
+      {
+        "feature": "CLI Commands & Settings",
+        "status": "covered",
+        "confidence": "high",
+        "evidence_files": ["storygen/main.py", "storygen/config.py"],
+        "notes": "Provides commands like create, write, read, groom, voice, and voices.",
+        "interacts_with": ["Story Outline Generation", "TTS Synthesis & Audiobook Compilation"]
+      },
+      {
+        "feature": "Story Outline Generation",
+        "status": "covered",
+        "confidence": "high",
+        "evidence_files": ["storygen/chains.py", "storygen/prompts.py"],
+        "notes": "Uses ChatOpenAI to progressively build a story prompt, structure, time period, morales, protagonists, and villains. Instructs LLM to generate descriptive voice profiles.",
+        "interacts_with": ["Story Grooming / Refinement"]
+      },
+      {
+        "feature": "Single and Multi-Chapter Writing",
+        "status": "covered",
+        "confidence": "high",
+        "evidence_files": ["storygen/chains.py", "storygen/prompts.py", "storygen/utils.py", "storygen/models.py"],
+        "notes": "Generates chapters based on target word count limits derived from reading speed. Allocates full budget to 1-chapter stories, and omits duplicate titles in story text headers.",
+        "interacts_with": ["Story Outline Generation", "TTS Synthesis & Audiobook Compilation"]
+      },
+      {
+        "feature": "Story Grooming / Refinement",
+        "status": "covered",
+        "confidence": "high",
+        "evidence_files": ["storygen/chains.py", "storygen/prompts.py"],
+        "notes": "Runs logical pre-reading loops to locate flaws, suggest fixes, and re-write chapters. Enforces that LLM rewrites omit chapter header prefixes.",
+        "interacts_with": ["Story Outline Generation"]
+      },
+      {
+        "feature": "TTS Synthesis & Audiobook Compilation",
+        "status": "covered",
+        "confidence": "high",
+        "evidence_files": ["storygen/tts.py", "storygen/utils.py"],
+        "notes": "Parses narrator and dialogue, assigns voice profiles, sends content to Gemini TTS, and concatenates audio via ffmpeg.",
+        "interacts_with": ["CLI Commands & Settings", "Single and Multi-Chapter Writing"]
+      }
+    ],
+    "open_questions": [
+      {
+        "question": "How are Gemini TTS API keys obtained and what are the specific billing or rate limit constraints for the gemini-3.1-flash-tts-preview model?",
+        "related_feature": "TTS Synthesis & Audiobook Compilation",
+        "priority": "medium"
+      },
+      {
+        "question": "Are there additional pre-built voices supported by the Gemini TTS API beyond Puck, Kore, Aoede, Charon, Fenrir, Leda?",
+        "related_feature": "TTS Synthesis & Audiobook Compilation",
+        "priority": "low"
+      }
+    ],
+    "gaps_identified": [
+      {
+        "path": "test_llm.py",
+        "reason": "Analyze how LLM structured output compatibility (json_mode vs function_calling) is verified.",
+        "related_feature": "Story Outline Generation",
+        "priority": "low"
+      },
+      {
+        "path": "test_typer.py",
+        "reason": "Examine validation checks and defaults testing for Typer CLI commands.",
+        "related_feature": "CLI Commands & Settings",
+        "priority": "low"
+      },
+      {
+        "path": "requirements.txt",
+        "reason": "Review dependencies version pinning to verify compatibility requirements.",
+        "related_feature": "CLI Commands & Settings",
+        "priority": "low"
+      }
+    ]
+  }
+}

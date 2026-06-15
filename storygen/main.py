@@ -3,7 +3,9 @@ from storygen.chains import generate_ideas, build_story, refine_story
 from storygen.tts import compile_audiobook
 from storygen.utils import save_json, load_json, sanitize_filename
 from storygen.config import settings, VoiceName
+from storygen.evaluation import evaluate_stories
 from storygen.models import Story
+import os
 
 app = typer.Typer(help="Children Story Generator")
 story_app = typer.Typer()
@@ -115,6 +117,46 @@ def voice(file: str):
     story = load_json(file, Story)
     compile_audiobook(story, sanitize_filename(story.title))
     typer.echo("Audio generation complete.")
+
+@story_app.command("best")
+def best(
+    suggestion: str = typer.Argument("", help="Optional story suggestion"), 
+    count: int = typer.Option(3, help="Number of stories to generate and compare"),
+    chapters: int = typer.Option(None, help="Number of chapters (overrides global option)")
+):
+    """Generates multiple stories, compares them, and generates voice for the best one."""
+    if chapters is not None:
+        settings.chapters = chapters
+        
+    typer.echo(f"Generating {count} candidate stories...")
+    
+    stories = []
+    filepaths = []
+    for i in range(count):
+        typer.echo(f"\n--- Generating Candidate {i+1}/{count} ---")
+        story = build_story(suggestion)
+        story = refine_story(story)
+        filepath = save_json(story, f"candidate_{i+1}_{story.title}")
+        stories.append(story)
+        filepaths.append(filepath)
+        
+    typer.echo("\n--- Evaluating Stories ---")
+    winner = evaluate_stories(stories)
+    
+    # Save the winner
+    winner_filepath = save_json(winner, f"winner_{winner.title}")
+    
+    # Delete the losers (candidates)
+    for fp in filepaths:
+        try:
+            if os.path.exists(fp):
+                os.remove(fp)
+        except Exception as e:
+            pass
+            
+    typer.echo("Generating Text to Speech for the Winner...")
+    compile_audiobook(winner, sanitize_filename(winner.title))
+    typer.echo(f"Success!\nBest Story: {winner.title}\njson: {winner_filepath}")
 
 if __name__ == "__main__":
     app()

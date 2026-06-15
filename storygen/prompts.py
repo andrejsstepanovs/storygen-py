@@ -149,7 +149,7 @@ FIGURE_PROTAGONISTS_PROMPT = ChatPromptTemplate.from_messages([
 
 ```
 
-Be mindful about how many you are picking. It is totally OK to pick single or multiple same types of protagonists as they're personas will be extended later on with more details.Your task now is to pick from the list.
+Please generate 3 to 6 protagonists. We will randomly select from this list to keep things fresh.
 Pick good simple but memorable protagonist names.
 Be creative with your picks. We want a vibrant, exciting story and protagonists are/is important and needs to be suitable and interesting.
 For the `voice` property, DO NOT use vague terms like "medium", "high", or "low". Be highly descriptive, specific, and creative! Examples of good voices: "Deep grumpy and sad old male voice", "Overly excited and jumpy female kid voice", "Raspy and mysterious whisper".
@@ -167,15 +167,14 @@ FIGURE_MORALES_PROMPT = ChatPromptTemplate.from_messages([
 
 ```
 
-Pick morales (`name`) from list of available morales:
+Pick 4 to 6 morales (`name`) from list of available morales:
 
 ```json
 {morales_json}
 
 ```
 
-Be flexible with your picks. We want creative choices for exciting story.
-Do not be afraid to pick something (I noticed you always pick Courage) that is not fitting perfectly. The more the better.
+Be flexible with your picks. We want creative choices for exciting story. The more the better.
 {general_instruction} {force_json}
 No yapping. Answer with a list of morale names as strings (as simple array list with no key(s)) in JSON format.
 Example: {example_json}""")
@@ -191,14 +190,14 @@ No yapping. Answer with a list of story ideas as strings (as simple array list w
 
 FIGURE_VILLAIN_PROMPT = ChatPromptTemplate.from_messages([
 ("system", "You are helping to prepare a story book. Villain that you are building (writing) will be used later on when story itself will be written."),
-("user", """Create a JSON Villain object for this {audience} story:
+("user", """Create a JSON Villains object containing 3 different villains for this {audience} story:
 
 ```json
 {story_json}
 
 ```
 
-Create a villain that fits the story. Think about their name, description, voice, visual_look, and backstory. I noticed that you often pick wizards that can do magic. Try to be more creative (if story suggestion allows it) and find a villain that is more down to earth (but still evil, bad, annoying, etc.) with his/her own backstory, skills and agenda that we can work with in the story.
+Create 3 distinct villains that fit the story. Think about their name, description, voice, visual_look, and backstory. Try to be creative and find a villain that is more down to earth (but still evil, bad, annoying, etc.) with his/her own backstory, skills and agenda that we can work with in the story.
 Villain can also be elements of nature or unmovable objects and that kind of stuff. Depends on the story we're building. Be creative if possible.
 For the `voice` property, DO NOT use vague terms like "medium", "high", or "low". Be highly descriptive, specific, and creative! Examples of good voices: "Deep grumpy and sad old male voice", "Overly excited and jumpy female kid voice", "Raspy and mysterious whisper".
 
@@ -222,14 +221,14 @@ Story summary and story plan to help the writer later on when they will write th
 
 FIGURE_TIME_PERIOD_PROMPT = ChatPromptTemplate.from_messages([
 ("system", "You are helping to prepare a story ideas that will be used later on."),
-("user", """Create a list of time periods that will fit the {audience} story we will write. Story:
+("user", """Create a list of 3 different time periods that will fit the {audience} story we will write. Story:
 
 ```json
 {story_json}
 
 ```
 
-Pick time periods (`name`) from list of available time periods:
+Pick 3 time periods (`name`) from list of available time periods:
 
 ```json
 {time_periods_json}
@@ -270,22 +269,22 @@ Answer only with the summary. No yapping. No other explanations, comments, notes
 
 FIGURE_TITLE_PROMPT = ChatPromptTemplate.from_messages([
 ("system", "You are writing a story book title."),
-("user", """Write a book name (title) for this {audience} story. **This is the {audience} Story you need to work with**:
+("user", """Write 3 book names (titles) for this {audience} story. **This is the {audience} Story you need to work with**:
 
 ```json
 {story_json}
 
 ```
 
-Title must be 3-5 words long. Do not explain your choice, no explenation, notes or anything else is necessary. Answer only with 3-5 words!
-{general_instruction}
-Examples: 'The Secret Library of Wishes', 'The Brave Little Firefly', 'The girl and the Talking Tree'
-Answer only with the short title (3-5 words). Answer only with short story title text.""")
+Titles must be 3-5 words long. Do not explain your choices, no explanation, notes or anything else is necessary.
+{general_instruction} {force_json}
+Examples: ["The Secret Library of Wishes", "The Brave Little Firefly", "The girl and the Talking Tree"]
+Answer only with a JSON array of 3 short titles (3-5 words each).""")
 ])
 
 FIGURE_CHAPTER_PROMPT = ChatPromptTemplate.from_messages([
 ("system", "You are writing a story book chapter by chapter. Expand the story with one chapter. You are creative and decisive story writer."),
-("user", """Write the single full chapter text, ensuring it flows naturally and keeps the reader engaged. **This is the {audience} story you need to work with**:
+("user", """Write 3 variations of the single full chapter text, ensuring it flows naturally and keeps the reader engaged. **This is the {audience} story you need to work with**:
 
 ```json
 {story_json}
@@ -293,15 +292,15 @@ FIGURE_CHAPTER_PROMPT = ChatPromptTemplate.from_messages([
 ```
 
 You need to write a chapter: "{chapter_number}) - {chapter_title}" content (text) {chapter_intent} Make sure to strictly follow the story `plan` from the JSON and cover the events intended for this chapter. Chapter should be written (should fit within) with approximately {word_count} words.
-Take your time to think about well-crafted chapter that fits the plot, enhances the narrative, and makes logical sense.
-{general_instruction}
+Take your time to think about well-crafted chapter variations that fit the plot, enhance the narrative, and make logical sense.
+{general_instruction} {force_json}
 {chapter_prompt_instructions}
-Answer only with the story content. Do NOT include the chapter number or chapter title in your output. Start the text directly with the story narrative. No yapping. No other explanations or unrelated to title text is necessary. Dont explain yourself. Write only story content and nothing else.""")
+Answer only with a JSON array containing 3 strings, where each string is a full variation of the chapter content. Do NOT include the chapter number or chapter title in your output strings. Start the text directly with the story narrative. No yapping. No other explanations or unrelated text is necessary.""")
 ])
 
 FIGURE_LOCATION_PROMPT = ChatPromptTemplate.from_messages([
 ("system", "You are helping to prepare a story book. Story location that you are building (writing) will be used later on when story itself will be written."),
-("user", """Create and describe a location where the story will take place. **This is the {audience} Story you need to work with**:
+("user", """Create a list of 3 different locations where the story could take place. **This is the {audience} Story you need to work with**:
 
 ```json
 {story_json}
@@ -309,8 +308,9 @@ FIGURE_LOCATION_PROMPT = ChatPromptTemplate.from_messages([
 ```
 
 Be creative while creating this story world. Do not mention protagonist or villain. Take into consideration Story Suggestion. Keep the world within time period that the story is taking place in. Keep the world size in line with story length. We will not be able to cram huge world into 2 minute story. Same applies other way around, we should have big enough world for longer stories. Specific details are good. Where who lives and other places around the protagonist(s) and villain are important as there most often the action (story) will happen. Dont be afraid to expand the world with more locations if you see that will benefit the upcoming story. Make the world so it is easy to imagine for {audience}. If writing for children then make interesting but not excessively complicated, so that little readers have no problem understanding it.
-{general_instruction}
-Answer only with the location text (content). No yapping. No other explanations or unrelated to title text is necessary. Dont explain yourself. Answer only with the story location text.""")
+{general_instruction} {force_json}
+Answer only with a JSON array of 3 strings (locations). No yapping. No other explanations or unrelated to title text is necessary. Dont explain yourself.
+Example: ["Location 1 description", "Location 2 description", "Location 3 description"]""")
 ])
 
 COMPARE_STORIES_PROMPT = ChatPromptTemplate.from_messages([
@@ -333,4 +333,39 @@ COMPARE_STORIES_PROMPT = ChatPromptTemplate.from_messages([
 Compare these 2 stories and answer with number which story is better. This is really important task, be careful. Your answer matters a lot! Best story author will get $ 1000000 cash prize.
 Consider story plot, engagement and how fun it would be to read. Analyze also story plot logical issues. If one story plot is logically broken (do not make sense), then that is really bad. Answer with single word that is a number in INTEGER format. Do not explain why you picked one over the other. If story 1 is better then answer with 1, if story 2 is better then answer with 2.
 {general_instruction}""")
+])
+
+GENERATE_TOPICS_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", "You are an expert story critic."),
+    ("user", """Generate 3 to 5 rating topics (criteria) to evaluate a {audience} story.
+    
+Think about what we value most in a good story. Align that with world's best stories in this genre. For example, if it is a children's story, compare how Disney or Brother Grimm they are, along with storyline and consistency.
+Return ONLY a JSON array of strings, where each string is a rating topic.
+{general_instruction} {force_json}
+Example: ["Disney-like magic and wonder", "Storyline consistency", "Engagement and pacing", "Creative characters"]""")
+])
+
+PAIRWISE_RATING_PROMPT = ChatPromptTemplate.from_messages([
+    ("system", "You are an expert story critic comparing two stories."),
+    ("user", """You will be given two {audience} stories. Rate both stories from 1 to 5 on the provided rating topics.
+
+**Rating Topics:**
+{topics_json}
+
+**Story 1:**
+```json
+{story_1_json}
+```
+
+**Story 2:**
+```json
+{story_2_json}
+```
+
+Evaluate both stories carefully. Return ONLY a JSON object with this exact structure:
+{{
+  "story_1_scores": {{ "topic name": score, ... }},
+  "story_2_scores": {{ "topic name": score, ... }}
+}}
+{general_instruction} {force_json}""")
 ])

@@ -38,6 +38,10 @@ class Problem(BaseModel):
     chapter_name: str
     issues_array_string: List[str]
 
+class Villains(BaseModel):
+    """Wrapper for list of Villains returned by structured output."""
+    villains: List["Villain"]
+
 class Problems(BaseModel):
     """Wrapper for list of Problems returned by structured output."""
     problems: List["Problem"]
