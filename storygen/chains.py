@@ -40,7 +40,10 @@ def build_story(suggestion: str) -> Story:
 
     available_time_periods = [{"name": "Once upon a time", "description": "Fairy-tale setting"}]
     available_morales = [{"name": "Kindness and Compassion", "description": "Treat others with care"}]
-    story.structure = Structure(name="Three-Act Structure", description="Setup, Primary action, Resolution")
+    if chap_count <= 1:
+        story.structure = Structure(name="Single Story", description="A concise, single-chapter narrative")
+    else:
+        story.structure = Structure(name="Three-Act Structure", description="Setup, Primary action, Resolution")
 
     # 2. Time Period
     tp_chain = FIGURE_TIME_PERIOD_PROMPT | llm | JsonOutputParser()
@@ -167,6 +170,7 @@ def build_story(suggestion: str) -> Story:
     story.plan = remove_emojis(plan_chain.invoke({
         "audience": settings.audience,
         "story_json": story.model_dump_json(),
+        "chapter_count": chap_count,
         "general_instruction": GENERAL_INSTRUCTION
     }).content.strip())
 

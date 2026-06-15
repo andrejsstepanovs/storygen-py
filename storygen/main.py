@@ -1,4 +1,5 @@
 import typer
+import time
 from storygen.chains import generate_ideas, build_story, refine_story
 from storygen.tts import compile_audiobook
 from storygen.utils import save_json, load_json, sanitize_filename
@@ -76,6 +77,7 @@ def ideas(count: int = typer.Option(6, help="Provide list of ideas for stories")
 @story_app.command("create")
 def create(suggestion: str):
     """Creates a Story from a suggestion string"""
+    start_time = time.perf_counter()
     typer.echo("Starting to work on a new story...")
     story = build_story(suggestion)
     save_json(story, story.title)
@@ -86,8 +88,10 @@ def create(suggestion: str):
     filepath = save_json(story, f"final_groomed_{story.title}")
     
     typer.echo("Generating Text to Speech...")
-    compile_audiobook(story, sanitize_filename(story.title))
-    typer.echo(f"Success!\nStory: {story.title}\njson: {filepath}")
+    mp3_path = compile_audiobook(story, sanitize_filename(story.title))
+    elapsed = time.perf_counter() - start_time
+    minutes, seconds = divmod(elapsed, 60)
+    typer.echo(f"Success!\nStory: {story.title}\njson: {filepath}\nmp3: {mp3_path}\nTotal time: {int(minutes)}m {seconds:.1f}s")
 
 @story_app.command("write")
 def write(suggestion: str):
@@ -115,8 +119,11 @@ def groom(file: str):
 def voice(file: str):
     """Generate audio from an existing JSON file"""
     story = load_json(file, Story)
-    compile_audiobook(story, sanitize_filename(story.title))
-    typer.echo("Audio generation complete.")
+    start_time = time.perf_counter()
+    mp3_path = compile_audiobook(story, sanitize_filename(story.title))
+    elapsed = time.perf_counter() - start_time
+    minutes, seconds = divmod(elapsed, 60)
+    typer.echo(f"Audio generation complete.\nmp3: {mp3_path}\nTime: {int(minutes)}m {seconds:.1f}s")
 
 @story_app.command("best")
 def best(
@@ -125,6 +132,7 @@ def best(
     chapters: int = typer.Option(None, help="Number of chapters (overrides global option)")
 ):
     """Generates multiple stories, compares them, and generates voice for the best one."""
+    start_time = time.perf_counter()
     if chapters is not None:
         settings.chapters = chapters
         
@@ -143,10 +151,8 @@ def best(
     typer.echo("\n--- Evaluating Stories ---")
     winner = evaluate_stories(stories)
     
-    # Save the winner
     winner_filepath = save_json(winner, f"winner_{winner.title}")
     
-    # Delete the losers (candidates)
     for fp in filepaths:
         try:
             if os.path.exists(fp):
@@ -155,8 +161,10 @@ def best(
             pass
             
     typer.echo("Generating Text to Speech for the Winner...")
-    compile_audiobook(winner, sanitize_filename(winner.title))
-    typer.echo(f"Success!\nBest Story: {winner.title}\njson: {winner_filepath}")
+    mp3_path = compile_audiobook(winner, sanitize_filename(winner.title))
+    elapsed = time.perf_counter() - start_time
+    minutes, seconds = divmod(elapsed, 60)
+    typer.echo(f"Success!\nBest Story: {winner.title}\njson: {winner_filepath}\nmp3: {mp3_path}\nTotal time: {int(minutes)}m {seconds:.1f}s")
 
 if __name__ == "__main__":
     app()

@@ -147,3 +147,4 @@ def compile_audiobook(story: Story, filename: str):
     os.remove(concat_list)
     for mp3 in mp3_files:
         os.remove(mp3)
+    return str(final_path)
