@@ -250,7 +250,7 @@ FIGURE_CHAPTER_TITLES_PROMPT = ChatPromptTemplate.from_messages([
 
 Make sure that chapter titles align with existing story details. Take into consideration Story Suggestion. Make sure that story have a clear ending. Be mindful about the chapter count so it aligns good with story length. Usually there is no need for more than {chapter_count} chapters. Write chapter titles in a way that the plot is naturally moving forward and is aligned with defined {audience} story structure requirements.
 {general_instruction} {force_json} Make sure your answer starts with [ and list of json array values.
-Example: ['The Mysterious Map', 'The Magic Paintbrush', 'The Rainbow Bridge', 'The final battle', 'The Return to Home Sweet Home']""")
+Example: ["The Mysterious Map", "The Magic Paintbrush", "The Rainbow Bridge", "The Final Battle", "The Return to Home Sweet Home"]""")
 ])
 
 FIGURE_SUMMARY_PROMPT = ChatPromptTemplate.from_messages([

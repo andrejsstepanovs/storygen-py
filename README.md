@@ -30,7 +30,7 @@ cp .env.example .env
 uv sync
 
 # 4. Verify it works
-uv run python -m storygen.main story voices
+uv run storygen --help
 ```
 
 ---
@@ -80,19 +80,19 @@ Any provider using the standard `/v1/chat/completions` endpoint works — Portke
 
 ```bash
 # Generate + synthesize a full audiobook
-uv run python -m storygen.main story create "A tiny frog who wanted to fly"
+uv run storygen story create "A tiny frog who wanted to fly"
 
 # Write story text only (no audio)
-uv run python -m storygen.main story write "A sleepy dragon in a quiet volcano"
+uv run storygen story write "A sleepy dragon in a quiet volcano"
 
 # Synthesize audio from an existing story JSON
-uv run python -m storygen.main story voice tmp/final_groomed_A_tiny_frog.json
+uv run storygen story voice tmp/final_groomed_A_tiny_frog.json
 
 # List available TTS voices
-uv run python -m storygen.main story voices
+uv run storygen story voices
 
 # Full help (all commands and options)
-uv run python -m storygen.main --help
+uv run storygen --help
 ```
 
 ### Options
