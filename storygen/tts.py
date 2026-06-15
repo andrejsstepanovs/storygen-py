@@ -41,6 +41,7 @@ def convert_narrative_to_script(text: str, speaker_mapping: dict[str, str]) -> t
             used_speakers[speaker] = speaker_mapping[speaker_lower]
             lines.append(f"{speaker}: {dialogue}")
         else:
+            # If the speaker isn't recognized, fallback to the narrator reading the dialogue
             lines.append(f"Narrator: {speaker} said \"{dialogue}\"")
             
         last_end = match.end()
@@ -49,12 +50,20 @@ def convert_narrative_to_script(text: str, speaker_mapping: dict[str, str]) -> t
     if narration_after:
         lines.append(f"Narrator: {narration_after}")
 
-    if len(used_speakers) >= 2:
+    # If we found any recognized speakers, we will use multiSpeakerVoiceConfig.
+    # Therefore, we MUST also configure the "Narrator".
+    if used_speakers:
         used_speakers["Narrator"] = settings.voice
-    # If only 0-1 speaking characters, use single-voice narration (no multiSpeakerVoiceConfig)
-
-    speaker_configs = [{"speaker": k, "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": v}}} for k, v in used_speakers.items()]
-    return "\n".join(lines), speaker_configs
+        
+        # Make sure values are strings
+        speaker_configs = [
+            {"speaker": k, "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": v.value if hasattr(v, 'value') else str(v)}}}
+            for k, v in used_speakers.items()
+        ]
+        return "\n".join(lines), speaker_configs
+    else:
+        # If no dialogue was matched, return the plain text so standard TTS doesn't read "Narrator: "
+        return text.strip(), []
 
 def generate_tts(text: str, story: Story, output_path: str):
     speaker_mapping = build_speaker_voices(story)
